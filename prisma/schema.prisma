@@ -1,0 +1,1031 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+}
+
+// ============================================================================
+// MULTI-TENANT ORGANIZATIONS (= Tenants)
+// ============================================================================
+
+model Organization {
+  id         String  @id @default(cuid())
+  name       String
+  externalId String? @unique
+
+  // Company details
+  legalName   String? // Full legal entity name
+  industry    String? // Real Estate, Property Management, etc.
+  companySize String? // 1-10, 11-50, 51-200, 201-500, 500+
+  website     String?
+  phone       String?
+  email       String? // Primary company email
+
+  // Address
+  streetAddress String?
+  city          String?
+  state         String?
+  postalCode    String?
+  country       String?
+
+  // Subscription & status
+  subscriptionPlan String @default("standard") // standard, premium, enterprise
+  status           String @default("active") // active, suspended, inactive
+  maxUsers         Int? // License limit (null = unlimited)
+
+  // Billing
+  billingEmail String?
+  taxId        String? // Tax registration number
+
+  // Branding
+  logoUrl      String?
+  primaryColor String? // Hex color for white-labeling
+
+  // Audit
+  createdBy String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
+
+  // Relations
+  members                OrganizationMember[]
+  roles                  Role[]
+  businessUnits          BusinessUnit[]
+  leads                  Lead[]
+  contacts               Contact[]
+  opportunities          Opportunity[]
+  crmTasks               CrmTask[]
+  crmActivities          CrmActivity[]
+  allowedScopes          TenantAllowedScope[]
+  customFieldDefinitions CustomFieldDefinition[]
+  homepageBlocks         HomepageBlock[]
+  apiKeys                ApiKey[]
+  webhookRequestLogs     WebhookRequestLog[]
+
+  @@index([createdAt])
+  @@index([status])
+}
+
+model OrganizationMember {
+  orgId      String
+  userId     String
+  org        Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  user       User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  assignedAt DateTime     @default(now())
+
+  @@id([orgId, userId])
+  @@index([userId])
+}
+
+// ============================================================================
+// AUTH: users, credentials, sessions
+// ============================================================================
+
+model User {
+  id                   String                 @id @default(cuid())
+  email                String?
+  emailVerified        Boolean                @default(false)
+  name                 String?
+  picture              String?
+  isExplicitInvite     Boolean                @default(false)
+  inviteTokenHash      String?                @unique
+  inviteTokenExpiresAt DateTime?
+  lastSeenAt           DateTime               @default(now()) @updatedAt
+  credential           Credential?
+  sessions             Session[]
+  roles                UserRole[]
+  organizations        OrganizationMember[]
+  chatSessions         ChatSession[]
+  ownedLeads           Lead[]                 @relation("LeadOwner")
+  ownedContacts        Contact[]              @relation("ContactOwner")
+  ownedOpportunities   Opportunity[]          @relation("OpportunityOwner")
+  teamMemberships      TeamMember[]
+  assignedTasks        CrmTask[]              @relation("TaskOwner")
+  crmActivities        CrmActivity[]          @relation("ActivityUser")
+  auditLogs            AuditLog[]             @relation("AuditUser")
+  reportDefinitions    ReportDefinition[]     @relation("ReportCreator")
+  reportFolders        ReportFolder[]         @relation("ReportFolderCreator")
+  dashboards           Dashboard[]            @relation("DashboardCreator")
+  dashboardFolders     DashboardFolder[]      @relation("DashboardFolderCreator")
+  deletionRequests     DeletionRequest[]      @relation("DeletionRequester")
+  sentMessages         CommunicationMessage[] @relation("MessageSender")
+  internalComments     InternalComment[]      @relation("CommentAuthor")
+  teamChatMessages     TeamChatMessage[]      @relation("ChatMessageAuthor")
+  chatChannelMemberships TeamChatChannelMember[] @relation("ChatChannelMember")
+  campaigns            Campaign[]             @relation("CampaignCreator")
+  campaignsUpdated     Campaign[]             @relation("CampaignUpdater")
+
+  @@index([email])
+  @@index([lastSeenAt])
+  @@index([isExplicitInvite])
+}
+
+model Credential {
+  id           String   @id @default(cuid())
+  userId       String   @unique
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  passwordHash String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model Session {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tokenHash   String   @unique
+  activeOrgId String?
+  createdAt   DateTime @default(now())
+  lastSeenAt  DateTime @default(now()) @updatedAt
+  expiresAt   DateTime
+
+  @@index([userId])
+  @@index([expiresAt])
+}
+
+// ============================================================================
+// ACCESS CONTROL SYSTEM
+// ============================================================================
+
+model Scope {
+  id                  String               @id @default(cuid())
+  name                String               @unique
+  description         String?
+  isSystem            Boolean              @default(false)
+  orgAssignable       Boolean              @default(false)
+  createdAt           DateTime             @default(now())
+  roles               RoleScope[]
+  tenantAllowedScopes TenantAllowedScope[]
+
+  @@index([isSystem])
+  @@index([orgAssignable])
+}
+
+model TenantAllowedScope {
+  orgId   String
+  scopeId String
+  org     Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  scope   Scope        @relation(fields: [scopeId], references: [id], onDelete: Cascade)
+
+  @@id([orgId, scopeId])
+  @@index([orgId])
+  @@index([scopeId])
+}
+
+model Role {
+  id          String        @id @default(cuid())
+  name        String
+  description String?
+  isSystem    Boolean       @default(false)
+  isDefault   Boolean       @default(false)
+  orgId       String?
+  org         Organization? @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  createdAt   DateTime      @default(now())
+  scopes      RoleScope[]
+  users       UserRole[]
+
+  @@unique([name, orgId])
+  @@index([isSystem])
+  @@index([isDefault])
+  @@index([orgId])
+}
+
+model RoleScope {
+  roleId  String
+  scopeId String
+  role    Role   @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  scope   Scope  @relation(fields: [scopeId], references: [id], onDelete: Cascade)
+
+  @@id([roleId, scopeId])
+  @@index([roleId])
+}
+
+model UserRole {
+  userId     String
+  roleId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role       Role     @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  assignedAt DateTime @default(now())
+
+  @@id([userId, roleId])
+  @@index([userId])
+  @@index([roleId])
+}
+
+model CustomFieldDefinition {
+  id         String       @id @default(cuid())
+  orgId      String
+  org        Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  entityType String // Lead, Contact, Opportunity
+  key        String // slug, unique per org+entityType — used as the JSON key on the record
+  label      String
+  fieldType  String // text, number, date, select, checkbox
+  options    Json? // string[] — only for fieldType "select"
+  required   Boolean  @default(false)
+  sortOrder  Int      @default(0)
+  createdBy  String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@unique([orgId, entityType, key])
+  @@index([orgId, entityType])
+}
+
+// ============================================================================
+// AI CHAT SESSIONS
+// ============================================================================
+
+model ChatSession {
+  id                    String        @id @default(cuid())
+  userId                String
+  user                  User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name                  String        @default("New Chat")
+  compactedConversation String        @default("")
+  createdAt             DateTime      @default(now())
+  updatedAt             DateTime      @updatedAt
+  messages              ChatMessage[]
+
+  @@index([userId])
+  @@index([createdAt])
+}
+
+model ChatMessage {
+  id        String      @id @default(cuid())
+  sessionId String
+  session   ChatSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  role      String
+  content   String
+  type      String
+  toolData  String?
+  createdAt DateTime    @default(now())
+
+  @@index([sessionId])
+  @@index([createdAt])
+}
+
+// ============================================================================
+// ORGANIZATION HIERARCHY: Business Unit → Team → Members
+// ============================================================================
+
+model BusinessUnit {
+  id            String        @id @default(cuid())
+  orgId         String
+  org           Organization  @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  name          String
+  description   String?
+  status        String        @default("active") // active, inactive
+  createdAt     DateTime      @default(now())
+  teams         Team[]
+  leads         Lead[]        @relation("LeadBusinessUnit")
+  opportunities Opportunity[] @relation("OpportunityBusinessUnit")
+
+  @@index([orgId])
+  @@index([orgId, status])
+}
+
+model Team {
+  id              String           @id @default(cuid())
+  orgId           String
+  businessUnitId  String
+  businessUnit    BusinessUnit     @relation(fields: [businessUnitId], references: [id], onDelete: Cascade)
+  name            String
+  description     String?
+  createdAt       DateTime         @default(now())
+  members         TeamMember[]
+  leads           Lead[]           @relation("LeadTeam")
+  opportunities   Opportunity[]    @relation("OpportunityTeam")
+  roundRobinState RoundRobinState?
+
+  @@index([businessUnitId])
+  @@index([orgId])
+}
+
+model TeamMember {
+  userId     String
+  teamId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  team       Team     @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  assignedAt DateTime @default(now())
+
+  @@id([userId, teamId])
+  @@index([userId])
+  @@index([teamId])
+}
+
+// ============================================================================
+// CRM: Lead Management
+// ============================================================================
+
+model Lead {
+  id    String       @id @default(cuid())
+  orgId String
+  org   Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+
+  // Person info
+  firstName              String
+  lastName               String
+  email                  String?
+  phone                  String?
+  emailNormalized        String? // lowercased, trimmed — for matching
+  phoneNormalized        String? // E.164 format — for matching
+  preferredContactMethod String? // Email, Phone, SMS, WhatsApp
+  notes                  String?
+
+  // Source & intake
+  source       String  @default("Manual")
+  campaignId   String? // FK → Campaign
+  campaignName String? // Denormalized campaign name for quick display
+  intakeMode   String  @default("manual") // manual, webhook, landing_page, campaign_form
+
+  // Ownership & status (ownerUserId is OPTIONAL — null = in pool)
+  status      String  @default("New") // New, Working, Qualified, Disqualified, Converted, Merged. Pool = New + no owner.
+  ownerUserId String?
+  owner       User?   @relation("LeadOwner", fields: [ownerUserId], references: [id])
+
+  // Lifecycle
+  disqualifyReason   String? // Reason recorded on disqualification
+  convertedContactId String? // Link to contact created on conversion (reverse tracking)
+
+  // Duplicate detection
+  matchedLeadId String?
+  matchStrength String? // strong, weak
+  mergedIntoId  String? // if merged, points to surviving lead
+
+  // Org structure
+  businessUnitId String?
+  businessUnit   BusinessUnit? @relation("LeadBusinessUnit", fields: [businessUnitId], references: [id])
+  teamId         String?
+  team           Team?         @relation("LeadTeam", fields: [teamId], references: [id])
+
+  // Tenant-defined custom fields — { [CustomFieldDefinition.key]: value }
+  customFields Json?
+
+  // Audit
+  createdBy String?
+  updatedBy String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  messages CommunicationMessage[] @relation("LeadMessages")
+
+  // NO budget, propertyType, preferredArea — these live in Interest records
+
+  @@index([orgId])
+  @@index([orgId, status])
+  @@index([ownerUserId])
+  @@index([orgId, emailNormalized])
+  @@index([orgId, phoneNormalized])
+  @@index([teamId])
+  @@index([businessUnitId])
+  @@index([campaignId])
+  @@index([createdAt])
+}
+
+// ============================================================================
+// CRM: Contact Management (no Account entity)
+// ============================================================================
+
+model Contact {
+  id          String       @id @default(cuid())
+  orgId       String
+  org         Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  ownerUserId String // REQUIRED — ownership invariant
+  owner       User         @relation("ContactOwner", fields: [ownerUserId], references: [id])
+
+  // Identity
+  firstName              String
+  lastName               String
+  email                  String?
+  phone                  String?
+  secondaryEmail         String?
+  secondaryPhone         String?
+  emailNormalized        String? // lowercased — for re-inquiry matching
+  phoneNormalized        String? // E.164 — for re-inquiry matching
+  preferredContactMethod String? // Call / SMS / WhatsApp / Email
+
+  // Relationship state
+  lifecycleStage   String @default("Prospect") // Prospect / Customer
+  engagementStatus String @default("Active") // Active / Inactive
+  contactType      String @default("Individual") // Individual / Developer / Investor
+
+  // Address (contact's own residence/mailing)
+  streetAddress String?
+  city          String?
+  state         String?
+  postalCode    String?
+
+  // Provenance & attribution
+  source       String? // How they originally entered
+  campaignName String? // Campaign attribution
+  accountId    String? // Optional B2B link
+
+  // Lead origin snapshot (only for converted contacts)
+  originalLeadSource String? // How the lead first entered
+  originalCampaign   String? // Campaign that first brought them in
+  leadCreatedDate    String? // When they first entered as a lead
+  originalIntakeMode String? // Inbound or manual
+
+  // Relationship-deepening (B2C)
+  importantDates   String? // Birthday, anniversary — JSON or free text
+  householdContext String? // Spouse/partner, family size
+  notes            String? // Free-form agent context
+
+  // Compliance
+  marketingConsent String? // opt-in / opt-out
+
+  // Professional (kept from original)
+  title      String?
+  department String?
+
+  // Tenant-defined custom fields — { [CustomFieldDefinition.key]: value }
+  customFields Json?
+
+  // Audit
+  createdBy        String?
+  updatedBy        String?
+  createdAt        DateTime                 @default(now())
+  updatedAt        DateTime                 @updatedAt
+  opportunityRoles OpportunityContactRole[]
+
+  @@index([orgId])
+  @@index([ownerUserId])
+  @@index([lifecycleStage])
+  @@index([engagementStatus])
+  @@index([createdAt])
+}
+
+// ============================================================================
+// CRM: Opportunity Pipeline
+// ============================================================================
+
+model Opportunity {
+  id              String                   @id @default(cuid())
+  orgId           String
+  org             Organization             @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  leadId          String? // Link back to source lead
+  ownerUserId     String
+  owner           User                     @relation("OpportunityOwner", fields: [ownerUserId], references: [id])
+  name            String
+  stage           String                   @default("LeadQualified")
+  amount          Float?
+  probability     Int?
+  closeDate       String?
+  source          String?
+  campaignName    String? // Inherited from lead/interest for attribution
+  healthReasoning String?
+  interestId      String? // FK → Interest (traces deal to source interest)
+  businessUnitId  String?
+  businessUnit    BusinessUnit?            @relation("OpportunityBusinessUnit", fields: [businessUnitId], references: [id])
+  teamId          String?
+  team            Team?                    @relation("OpportunityTeam", fields: [teamId], references: [id])
+  customFields    Json? // Tenant-defined custom fields — { [CustomFieldDefinition.key]: value }
+  createdBy       String?
+  updatedBy       String?
+  createdAt       DateTime                 @default(now())
+  updatedAt       DateTime                 @updatedAt
+  contactRoles    OpportunityContactRole[]
+
+  @@index([orgId])
+  @@index([ownerUserId])
+  @@index([stage])
+  @@index([orgId, stage])
+  @@index([teamId])
+  @@index([createdAt])
+}
+
+model OpportunityContactRole {
+  id            String      @id @default(cuid())
+  opportunityId String
+  opportunity   Opportunity @relation(fields: [opportunityId], references: [id], onDelete: Cascade)
+  contactId     String
+  contact       Contact     @relation(fields: [contactId], references: [id], onDelete: Cascade)
+  roleName      String      @default("PrimaryBuyer") // PrimaryBuyer, CoBuyer, Investor, Attorney
+
+  @@unique([opportunityId, contactId])
+  @@index([opportunityId])
+  @@index([contactId])
+}
+
+// ============================================================================
+// CRM: Tasks & Activities
+// ============================================================================
+
+model CrmTask {
+  id                String       @id @default(cuid())
+  orgId             String
+  org               Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  ownerUserId       String
+  owner             User         @relation("TaskOwner", fields: [ownerUserId], references: [id])
+  relatedObjectType String // Lead, Account, Contact, Opportunity
+  relatedObjectId   String
+  subject           String
+  description       String?
+  dueDate           String?
+  priority          String       @default("Medium") // Low, Medium, High
+  status            String       @default("Open") // Open, InProgress, Completed, Cancelled
+  createdBy         String?
+  updatedBy         String?
+  createdAt         DateTime     @default(now())
+  updatedAt         DateTime     @updatedAt
+
+  @@index([orgId])
+  @@index([ownerUserId])
+  @@index([relatedObjectType, relatedObjectId])
+  @@index([status])
+  @@index([dueDate])
+}
+
+model CrmActivity {
+  id                String       @id @default(cuid())
+  orgId             String
+  org               Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  userId            String
+  user              User         @relation("ActivityUser", fields: [userId], references: [id])
+  relatedObjectType String // Lead, Account, Contact, Opportunity
+  relatedObjectId   String
+  activityType      String // Note, Call, Email, Meeting, StatusChange, StageChange, Assignment, Conversion
+  notes             String?
+  createdAt         DateTime     @default(now())
+
+  @@index([orgId])
+  @@index([userId])
+  @@index([relatedObjectType, relatedObjectId])
+  @@index([createdAt])
+}
+
+// ============================================================================
+// Lead Assignment: Round Robin State
+// ============================================================================
+
+model RoundRobinState {
+  id                 String   @id @default(cuid())
+  orgId              String
+  teamId             String   @unique
+  team               Team     @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  lastAssignedUserId String?
+  updatedAt          DateTime @updatedAt
+
+  @@index([orgId])
+}
+
+// ============================================================================
+// AUDIT & COMPLIANCE
+// ============================================================================
+
+model AuditLog {
+  id         String   @id @default(cuid())
+  orgId      String?
+  userId     String
+  user       User     @relation("AuditUser", fields: [userId], references: [id])
+  entityType String // Lead, Account, Contact, Opportunity, User, Role, etc.
+  entityId   String?
+  action     String // create, update, delete, login, permission_change, export, deletion_request
+  changes    String? // JSON: [{ field, oldValue, newValue }]
+  ipAddress  String?
+  createdAt  DateTime @default(now())
+
+  @@index([orgId])
+  @@index([userId])
+  @@index([entityType])
+  @@index([entityType, entityId])
+  @@index([action])
+  @@index([createdAt])
+}
+
+model DeletionRequest {
+  id           String    @id @default(cuid())
+  orgId        String
+  requestedBy  String
+  requester    User      @relation("DeletionRequester", fields: [requestedBy], references: [id])
+  subjectEmail String
+  subjectName  String?
+  reason       String?
+  status       String    @default("pending") // pending, processing, completed, rejected
+  completedAt  DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  @@index([orgId])
+  @@index([requestedBy])
+  @@index([status])
+  @@index([createdAt])
+}
+
+model DataRetentionPolicy {
+  id            String   @id @default(cuid())
+  orgId         String
+  entityType    String // Lead, Account, Contact, Opportunity, AuditLog
+  retentionDays Int      @default(365)
+  isActive      Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@unique([orgId, entityType])
+  @@index([orgId])
+}
+
+// ============================================================================
+// REPORTING
+// ============================================================================
+
+model ReportDefinition {
+  id          String   @id @default(cuid())
+  orgId       String
+  creatorId   String
+  creator     User     @relation("ReportCreator", fields: [creatorId], references: [id])
+  name        String
+  description String?
+  entityType  String // Lead, Account, Contact, Opportunity
+  config      String // JSON: { fields, filters, chartType, groupBy, sortBy, aggregation }
+  isShared    Boolean  @default(false)
+  folderId    String?
+  folder      ReportFolder? @relation(fields: [folderId], references: [id])
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([orgId])
+  @@index([creatorId])
+  @@index([orgId, isShared])
+  @@index([folderId])
+}
+
+model ReportFolder {
+  id        String   @id @default(cuid())
+  orgId     String
+  name      String
+  creatorId String
+  creator   User     @relation("ReportFolderCreator", fields: [creatorId], references: [id])
+  parentId  String?
+  parent    ReportFolder?  @relation("ReportFolderChildren", fields: [parentId], references: [id])
+  children  ReportFolder[] @relation("ReportFolderChildren")
+  isShared  Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  reports   ReportDefinition[]
+  shares    ReportFolderShare[]
+
+  @@index([orgId])
+  @@index([creatorId])
+  @@index([parentId])
+}
+
+model ReportFolderShare {
+  id         String   @id @default(cuid())
+  folderId   String
+  folder     ReportFolder @relation(fields: [folderId], references: [id])
+  targetType String   // "user" | "team"
+  targetId   String   // User.id or Team.id, depending on targetType
+  createdAt  DateTime @default(now())
+
+  @@unique([folderId, targetType, targetId])
+  @@index([folderId])
+}
+
+
+// ============================================================================
+// DASHBOARDS
+// ============================================================================
+
+model DashboardFolder {
+  id         String   @id @default(cuid())
+  orgId      String
+  name       String
+  creatorId  String
+  creator    User     @relation("DashboardFolderCreator", fields: [creatorId], references: [id])
+  parentId   String?
+  parent     DashboardFolder?  @relation("DashboardFolderChildren", fields: [parentId], references: [id])
+  children   DashboardFolder[] @relation("DashboardFolderChildren")
+  isShared   Boolean  @default(false)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  dashboards Dashboard[]
+
+  @@index([orgId])
+  @@index([creatorId])
+  @@index([parentId])
+}
+
+model Dashboard {
+  id          String   @id @default(cuid())
+  orgId       String
+  creatorId   String
+  creator     User     @relation("DashboardCreator", fields: [creatorId], references: [id])
+  name        String
+  description String?
+  isShared    Boolean  @default(false)
+  folderId    String?
+  folder      DashboardFolder? @relation(fields: [folderId], references: [id])
+  filters     String   // JSON: Array<{ entityType, field, operator, value }>
+  widgets     DashboardWidget[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([orgId])
+  @@index([creatorId])
+  @@index([folderId])
+}
+
+model DashboardWidget {
+  id          String    @id @default(cuid())
+  dashboardId String
+  dashboard   Dashboard @relation(fields: [dashboardId], references: [id], onDelete: Cascade)
+  entityType  String
+  chartType   String
+  groupBy     String?
+  aggregation String?
+  sortOrder   Int       @default(0)
+  createdAt   DateTime  @default(now())
+
+  @@index([dashboardId])
+}
+
+// ============================================================================
+// HOMEPAGE (org-admin-configured, shared by every user in the org)
+// ============================================================================
+
+// A single block on the org's shared Homepage. Not a real Prisma relation to
+// ReportDefinition/Dashboard (deliberately, matching Interest's polymorphic-parent
+// convention) — if the referenced report/dashboard is later deleted, the block is
+// just skipped when rendering rather than needing a cascade across features.
+model HomepageBlock {
+  id          String   @id @default(cuid())
+  orgId       String
+  org         Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  type        String   // "report" | "dashboard" | "listView" | "myTasks" | "recentActivity"
+  title       String?  // optional custom label shown above the block; falls back to the report/dashboard name
+  reportId    String?  // set when type = "report"
+  dashboardId String?  // set when type = "dashboard"
+  entityType  String?  // set when type = "listView": "Lead" | "Contact" | "Opportunity"
+  size        String   @default("medium") // "small" | "medium" | "large" — column span in the Homepage grid
+  sortOrder   Int      @default(0)
+  createdBy   String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([orgId])
+}
+
+// ============================================================================
+// AI CACHE
+// ============================================================================
+
+model AiCache {
+  id         String   @id @default(cuid())
+  orgId      String
+  entityType String // Lead, Opportunity, Account
+  entityId   String
+  cacheType  String // summary, recommendation, score, health
+  content    String // JSON content
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+
+  @@unique([entityType, entityId, cacheType])
+  @@index([orgId])
+  @@index([entityType, entityId])
+  @@index([expiresAt])
+}
+
+// ============================================================================
+// COMMUNICATIONS
+// ============================================================================
+
+model CommunicationMessage {
+  id               String    @id @default(cuid())
+  orgId            String
+  leadId           String
+  lead             Lead      @relation("LeadMessages", fields: [leadId], references: [id], onDelete: Cascade)
+  senderUserId     String
+  sender           User      @relation("MessageSender", fields: [senderUserId], references: [id])
+  channel          String // SMS, Email, Chat
+  direction        String    @default("outbound") // outbound, inbound
+  recipientAddress String // phone or email
+  subject          String? // email only
+  body             String
+  status           String    @default("queued") // queued, sent, delivered, failed, opened
+  templateId       String?
+  sentAt           DateTime?
+  deliveredAt      DateTime?
+  createdAt        DateTime  @default(now())
+
+  @@index([orgId])
+  @@index([leadId])
+  @@index([senderUserId])
+  @@index([channel])
+  @@index([createdAt])
+}
+
+model MessageTemplate {
+  id        String   @id @default(cuid())
+  orgId     String
+  name      String
+  channel   String // SMS, Email
+  subject   String? // email only
+  body      String // supports {{firstName}}, {{lastName}}, {{propertyType}}, {{preferredArea}}
+  category  String   @default("General") // Welcome, FollowUp, PropertyInfo, SiteVisit, General
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([orgId])
+  @@index([orgId, channel])
+  @@index([orgId, category])
+}
+
+// ============================================================================
+// INTERNAL COMMENTS (record-level discussion)
+// ============================================================================
+
+model InternalComment {
+  id                String   @id @default(cuid())
+  orgId             String
+  authorId          String
+  author            User     @relation("CommentAuthor", fields: [authorId], references: [id])
+  relatedObjectType String // Lead, Account, Contact, Opportunity
+  relatedObjectId   String
+  content           String
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@index([orgId])
+  @@index([authorId])
+  @@index([relatedObjectType, relatedObjectId])
+  @@index([createdAt])
+}
+
+// ============================================================================
+// TEAM CHAT (internal messaging)
+// ============================================================================
+
+model TeamChatChannel {
+  id          String   @id @default(cuid())
+  orgId       String
+  name        String
+  description String?
+  createdAt   DateTime @default(now())
+  messages    TeamChatMessage[]
+  members     TeamChatChannelMember[]
+
+  @@index([orgId])
+}
+
+model TeamChatChannelMember {
+  channelId String
+  channel   TeamChatChannel @relation(fields: [channelId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User            @relation("ChatChannelMember", fields: [userId], references: [id])
+  joinedAt  DateTime @default(now())
+
+  @@id([channelId, userId])
+  @@index([userId])
+}
+
+model TeamChatMessage {
+  id        String          @id @default(cuid())
+  channelId String
+  channel   TeamChatChannel @relation(fields: [channelId], references: [id], onDelete: Cascade)
+  authorId  String
+  author    User            @relation("ChatMessageAuthor", fields: [authorId], references: [id])
+  content   String
+  createdAt DateTime        @default(now())
+
+  @@index([channelId])
+  @@index([authorId])
+  @@index([createdAt])
+}
+
+// ============================================================================
+// INTEREST (separate from Lead — multiple interests per person)
+// ============================================================================
+
+model Interest {
+  id                   String   @id @default(cuid())
+  orgId                String
+  parentType           String // "Lead" or "Contact" — an Interest cannot exist without one of these
+  parentId             String // FK to Lead.id or Contact.id (polymorphic)
+  name                 String   @default("Untitled Interest")
+  propertyType         String? // Apartment, Villa, Townhouse, Commercial, Plot, etc.
+  budgetMin            Float?
+  budgetMax            Float?
+  locationArea         String?
+  bedrooms             Int?
+  bathrooms            Int?
+  furnishingPreference String? // Furnished / Semi / Unfurnished
+  moveInTimeline       String? // Immediate / 1 month / 3 months / 6 months
+  otherDetail          String?
+  campaignId           String? // FK → Campaign (for attribution)
+  source               String? // Channel this interest came from
+  status               String   @default("Active") // Active, Cooled, Fulfilled, Dropped
+  opportunityId        String? // Set when interest becomes an opportunity
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+
+  @@index([orgId])
+  @@index([parentType, parentId])
+  @@index([status])
+  @@index([campaignId])
+}
+
+// ============================================================================
+// ATTACHMENTS (polymorphic — Lead, Contact, or Opportunity)
+// ============================================================================
+
+model Attachment {
+  id         String   @id @default(cuid())
+  orgId      String
+  parentType String // "Lead" / "Contact" / "Opportunity"
+  parentId   String
+  fileName   String
+  fileSize   Int // bytes
+  mimeType   String
+  fileData   String // base64-encoded file content
+  uploadedBy String?
+  createdAt  DateTime @default(now())
+
+  @@index([orgId])
+  @@index([parentType, parentId])
+}
+
+// ============================================================================
+// CAMPAIGN (marketing efforts that generate leads)
+// ============================================================================
+
+model Campaign {
+  id        String   @id @default(cuid())
+  orgId     String
+  name      String
+  type      String? // Email, Facebook, Google, LandingPage, Event, Referral
+  status    String   @default("Active") // Active, Paused, Completed
+  startDate String?
+  endDate   String?
+  createdBy String?
+  creator   User?    @relation("CampaignCreator", fields: [createdBy], references: [id])
+  updatedBy String?
+  updater   User?    @relation("CampaignUpdater", fields: [updatedBy], references: [id])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([orgId])
+  @@index([orgId, status])
+  @@index([createdBy])
+}
+
+// ============================================================================
+// EXTERNAL LEAD INTAKE (Facebook/LinkedIn/Google Lead Ads via Zapier/Make, etc.)
+// ============================================================================
+
+// Org-scoped secret for authenticating POSTs to /api/v1/lead-intake. Only the hash is
+// stored — the raw key is shown once at creation time and never retrievable again.
+model ApiKey {
+  id         String    @id @default(cuid())
+  orgId      String
+  org        Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  name       String    // human label, e.g. "Zapier - Facebook Leads"
+  keyHash    String    @unique
+  keyPrefix  String    // first few chars of the raw key, shown in the UI for identification
+  createdBy  String?
+  lastUsedAt DateTime?
+  revokedAt  DateTime?
+  createdAt  DateTime  @default(now())
+
+  @@index([orgId])
+}
+
+// One row per request to the lead-intake webhook — the "black box" recorder. Lets an
+// admin see exactly what an integration sent and why it was accepted/rejected, without
+// needing server log access. orgId/apiKeyId are nullable so failed-auth attempts (bad or
+// missing key) still get recorded for debugging/security review.
+model WebhookRequestLog {
+  id             String   @id @default(cuid())
+  orgId          String?
+  org            Organization? @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  apiKeyId       String?
+  source         String?  // "facebook", "linkedin", "google", etc — from payload or inferred
+  externalLeadId String?  // the platform's own lead id, for idempotent replay detection
+  payload        String   // raw JSON body as received
+  status         Int      // HTTP status code returned
+  leadId         String?  // the created/matched Lead's id, if successful
+  error          String?  // rejection reason, if any
+  createdAt      DateTime @default(now())
+
+  @@index([orgId])
+  @@index([externalLeadId])
+  @@index([apiKeyId])
+}
+
+// ============================================================================
+// DUPLICATE EXCLUSION (pairs rejected as "not same person")
+// ============================================================================
+
+model DuplicateExclusion {
+  id        String   @id @default(cuid())
+  orgId     String
+  leadIdA   String
+  leadIdB   String
+  decidedBy String
+  createdAt DateTime @default(now())
+
+  @@unique([leadIdA, leadIdB])
+  @@index([orgId])
+}

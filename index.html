@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Real Estate Version 1</title>
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <script>
+    // Initialize theme before React loads to prevent flash of incorrect theme
+    // BaseBrowserApp will handle the reactive listener after React loads
+    (function() {            
+      // Always use system preference
+      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;            
+      if (prefersDark) {
+          document.documentElement.classList.add('dark');
+      } else {
+          document.documentElement.classList.remove('dark');
+      }            
+    })();
+  </script>
+</head>
+<body>
+  <div id="app"></div>
+</body>
+</html>
+

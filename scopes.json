@@ -1,0 +1,346 @@
+{
+  "_comment": "Access control configuration for Real Estate CRM.",
+  "_checklist": [
+    "All user-owned entities have queries filtered by ctx.userId",
+    "All org-scoped entities use orgColumn RLS for tenant isolation",
+    "New scopes added here when using scopedProcedure",
+    "RLS patterns configured in tables section for all tables",
+    "orgAssignable: true for CRM scopes so tenant admins can assign them"
+  ],
+  "scopes": [
+    { "name": "scopes:view", "description": "View all scopes", "isSystem": true, "orgAssignable": false },
+    { "name": "scopes:configure", "description": "Configure scope org-assignability", "isSystem": true, "orgAssignable": false },
+    { "name": "roles:view", "description": "View all roles and their scopes", "isSystem": true, "orgAssignable": false },
+    { "name": "roles:edit", "description": "Create, update, and delete roles", "isSystem": true, "orgAssignable": false },
+    { "name": "users:viewAll", "description": "View all users", "isSystem": true, "orgAssignable": false },
+    { "name": "users:editAll", "description": "Edit all users", "isSystem": true, "orgAssignable": false },
+    { "name": "users:viewRoles", "description": "View role assignments for all users", "isSystem": true, "orgAssignable": false },
+    { "name": "users:editRoles", "description": "Assign and remove roles from users", "isSystem": true, "orgAssignable": false },
+    { "name": "orgs:viewAll", "description": "View all organizations", "isSystem": true, "orgAssignable": false },
+    { "name": "orgs:edit", "description": "Create, update, delete organizations", "isSystem": true, "orgAssignable": false },
+    { "name": "orgs:manageMembers", "description": "Add/remove members from any org", "isSystem": true, "orgAssignable": false },
+    { "name": "orgs:manageOrgMembers", "description": "Manage members and roles in your organization", "isSystem": true, "orgAssignable": true },
+    { "name": "workflows:jobs:viewAll", "description": "View all users' workflow jobs", "isSystem": true, "orgAssignable": false },
+    { "name": "workflows:jobs:editAll", "description": "Edit, cancel any user's workflow jobs", "isSystem": true, "orgAssignable": false },
+    { "name": "workflows:schedules:viewAll", "description": "View all users' workflow schedules", "isSystem": true, "orgAssignable": false },
+    { "name": "workflows:schedules:editOwn", "description": "Create, edit, delete own workflow schedules", "isSystem": true, "orgAssignable": true },
+    { "name": "workflows:schedules:editAll", "description": "Edit, delete any user's workflow schedules", "isSystem": true, "orgAssignable": false },
+    { "name": "workflows:drafts:viewAll", "description": "View all users' workflow drafts", "isSystem": true, "orgAssignable": false },
+    { "name": "workflows:drafts:editAll", "description": "Edit, delete any user's workflow drafts", "isSystem": true, "orgAssignable": false },
+    { "name": "oauth:apps", "description": "Create and manage your own OAuth applications", "isSystem": true, "orgAssignable": false },
+    { "name": "oauth:admin", "description": "Administer all OAuth clients and identity providers", "isSystem": true, "orgAssignable": false },
+    { "name": "logs:view", "description": "View application logs", "isSystem": true, "orgAssignable": false },
+    { "name": "services:manage", "description": "Manage service configurations and credentials", "isSystem": true, "orgAssignable": false },
+    { "name": "app:settings", "description": "Manage app access settings", "isSystem": true, "orgAssignable": false },
+
+    { "name": "tenants:manage", "description": "Create, edit, suspend tenants (Platform Admin)", "isSystem": true, "orgAssignable": false },
+    { "name": "leads:viewAll", "description": "View all leads in organization", "isSystem": true, "orgAssignable": true },
+    { "name": "leads:viewTeam", "description": "View leads assigned to user's teams", "isSystem": true, "orgAssignable": true },
+    { "name": "leads:edit", "description": "Create and edit leads", "isSystem": true, "orgAssignable": true },
+    { "name": "leads:assign", "description": "Assign and reassign leads to agents", "isSystem": true, "orgAssignable": true },
+    { "name": "leads:convert", "description": "Convert leads to Account + Contact + Opportunity", "isSystem": true, "orgAssignable": true },
+    { "name": "leads:delete", "description": "Delete leads", "isSystem": true, "orgAssignable": true },
+    { "name": "contacts:viewAll", "description": "View all contacts in organization", "isSystem": true, "orgAssignable": true },
+    { "name": "contacts:edit", "description": "Create and edit contacts", "isSystem": true, "orgAssignable": true },
+    { "name": "contacts:delete", "description": "Delete contacts", "isSystem": true, "orgAssignable": true },
+    { "name": "opportunities:viewAll", "description": "View all opportunities in organization", "isSystem": true, "orgAssignable": true },
+    { "name": "opportunities:viewTeam", "description": "View team opportunities", "isSystem": true, "orgAssignable": true },
+    { "name": "opportunities:edit", "description": "Create and edit opportunities", "isSystem": true, "orgAssignable": true },
+    { "name": "opportunities:delete", "description": "Delete opportunities", "isSystem": true, "orgAssignable": true },
+    { "name": "tasks:viewAll", "description": "View all tasks in organization", "isSystem": true, "orgAssignable": true },
+    { "name": "tasks:edit", "description": "Create and edit tasks", "isSystem": true, "orgAssignable": true },
+    { "name": "activities:viewAll", "description": "View all activity logs in organization", "isSystem": true, "orgAssignable": true },
+    { "name": "businessUnits:manage", "description": "Manage business units", "isSystem": true, "orgAssignable": true },
+    { "name": "customFields:manage", "description": "Manage custom field definitions for leads, contacts, and opportunities", "isSystem": true, "orgAssignable": true },
+    { "name": "teams:manage", "description": "Manage teams and team members", "isSystem": true, "orgAssignable": true },
+    { "name": "dashboard:executive", "description": "View executive dashboard", "isSystem": true, "orgAssignable": true },
+    { "name": "dashboard:manager", "description": "View manager dashboard", "isSystem": true, "orgAssignable": true },
+    { "name": "reports:view", "description": "View reports", "isSystem": true, "orgAssignable": true },
+    { "name": "reports:edit", "description": "Create, edit, delete reports", "isSystem": true, "orgAssignable": true },
+    { "name": "audit:view", "description": "View audit logs", "isSystem": true, "orgAssignable": false },
+    { "name": "compliance:manage", "description": "Manage GDPR requests, data retention, and compliance", "isSystem": true, "orgAssignable": false },
+    { "name": "ai:use", "description": "Use AI features (scoring, summaries, recommendations)", "isSystem": true, "orgAssignable": true },
+    { "name": "communications:send", "description": "Send SMS, Email, and Chat messages to leads", "isSystem": true, "orgAssignable": true },
+    { "name": "communications:templates", "description": "Manage message templates", "isSystem": true, "orgAssignable": true },
+    { "name": "agents:viewPerformance", "description": "View agent performance reports", "isSystem": true, "orgAssignable": true },
+    { "name": "leads:claim", "description": "Claim leads from the pool", "isSystem": true, "orgAssignable": true },
+    { "name": "leads:merge", "description": "Merge duplicate leads", "isSystem": true, "orgAssignable": true },
+    { "name": "campaigns:view", "description": "View campaigns", "isSystem": true, "orgAssignable": true },
+    { "name": "campaigns:edit", "description": "Create and edit campaigns", "isSystem": true, "orgAssignable": true },
+    { "name": "interests:edit", "description": "Create and edit interest records", "isSystem": true, "orgAssignable": true }
+  ],
+  "tables": {
+    "Organization": {
+      "requiredScopes": {
+        "read": "orgs:viewAll",
+        "write": "orgs:edit"
+      }
+    },
+    "OrganizationMember": {
+      "requiredScopes": {
+        "read": "orgs:viewAll",
+        "write": "orgs:manageMembers"
+      }
+    },
+    "Scope": {
+      "requiredScopes": {
+        "write": "scopes:configure"
+      }
+    },
+    "Role": {
+      "orgColumn": "orgId",
+      "bypassScopes": {
+        "read": "roles:view",
+        "write": "roles:edit"
+      }
+    },
+    "RoleScope": {
+      "accessVia": {
+        "column": "roleId",
+        "parentTable": "Role",
+        "parentColumn": "id"
+      }
+    },
+    "User": {
+      "ownerColumn": "id",
+      "bypassScopes": {
+        "read": "users:viewAll",
+        "write": "users:editAll"
+      }
+    },
+    "UserRole": {
+      "requiredScopes": {
+        "read": "users:viewRoles",
+        "write": "users:editRoles"
+      }
+    },
+    "ServiceScope": {
+      "requiredScopes": {
+        "read": "scopes:view"
+      }
+    },
+    "AppSettings": {
+      "requiredScopes": {
+        "read": "app:settings",
+        "write": "app:settings"
+      }
+    },
+    "OAuthClient": {
+      "ownerColumn": "createdBy",
+      "requiredScopes": { "read": "oauth:admin", "write": "oauth:admin" }
+    },
+    "OAuthAuthorizationCode": {
+      "requiredScopes": { "read": "oauth:admin", "write": "oauth:admin" }
+    },
+    "OAuthRefreshToken": {
+      "ownerColumn": "userId"
+    },
+    "OAuthConsent": {
+      "ownerColumn": "userId"
+    },
+    "IdentityProvider": {
+      "requiredScopes": { "read": "oauth:admin", "write": "oauth:admin" }
+    },
+    "IdentityProviderLink": {
+      "ownerColumn": "userId"
+    },
+    "IdpAuthSession": {
+      "requiredScopes": { "read": "oauth:admin", "write": "oauth:admin" }
+    },
+    "AppService": {
+      "requiredScopes": { "read": "services:manage", "write": "services:manage" }
+    },
+    "AppServiceSetting": {
+      "requiredScopes": { "read": "services:manage", "write": "services:manage" }
+    },
+    "AppServiceCustomAuthSetting": {
+      "requiredScopes": { "read": "services:manage", "write": "services:manage" }
+    },
+    "AppServiceSystemCredential": {
+      "requiredScopes": { "read": "services:manage", "write": "services:manage" }
+    },
+    "AppServiceUserCredential": {
+      "ownerColumn": "userId"
+    },
+    "AppServiceOAuthSystemCredential": {
+      "requiredScopes": { "read": "services:manage", "write": "services:manage" }
+    },
+    "AppServiceOAuthUserCredential": {
+      "ownerColumn": "userId"
+    },
+    "AppServiceOAuthState": {
+      "requiredScopes": { "read": "services:manage", "write": "services:manage" }
+    },
+    "ChatSession": {
+      "ownerColumn": "userId"
+    },
+    "ChatMessage": {
+      "accessVia": {
+        "column": "sessionId",
+        "parentTable": "ChatSession",
+        "parentColumn": "id"
+      }
+    },
+    "_wf_jobs": {
+      "ownerColumn": "user_id",
+      "bypassScopes": {
+        "read": "workflows:jobs:viewAll",
+        "write": "workflows:jobs:editAll"
+      }
+    },
+    "_wf_schedules": {
+      "ownerColumn": "user_id",
+      "bypassScopes": {
+        "read": "workflows:schedules:viewAll",
+        "write": "workflows:schedules:editAll"
+      }
+    },
+    "_wf_drafts": {
+      "ownerColumn": "user_id",
+      "bypassScopes": {
+        "read": "workflows:drafts:viewAll",
+        "write": "workflows:drafts:editAll"
+      }
+    },
+    "_wf_step_logs": {
+      "accessVia": {
+        "column": "job_id",
+        "parentTable": "_wf_jobs",
+        "parentColumn": "id"
+      }
+    },
+    "BusinessUnit": {
+      "orgColumn": "orgId"
+    },
+    "Team": {
+      "orgColumn": "orgId"
+    },
+    "TeamMember": {
+      "accessVia": {
+        "column": "teamId",
+        "parentTable": "Team",
+        "parentColumn": "id"
+      }
+    },
+    "Lead": {
+      "orgColumn": "orgId",
+      "bypassScopes": {
+        "read": "leads:viewAll"
+      }
+    },
+    "Contact": {
+      "orgColumn": "orgId",
+      "bypassScopes": {
+        "read": "contacts:viewAll"
+      }
+    },
+    "Opportunity": {
+      "orgColumn": "orgId",
+      "bypassScopes": {
+        "read": "opportunities:viewAll"
+      }
+    },
+    "OpportunityContactRole": {
+      "accessVia": {
+        "column": "opportunityId",
+        "parentTable": "Opportunity",
+        "parentColumn": "id"
+      }
+    },
+    "CrmTask": {
+      "orgColumn": "orgId",
+      "bypassScopes": {
+        "read": "tasks:viewAll"
+      }
+    },
+    "CrmActivity": {
+      "orgColumn": "orgId",
+      "bypassScopes": {
+        "read": "activities:viewAll"
+      }
+    },
+    "RoundRobinState": {
+      "orgColumn": "orgId"
+    },
+    "AuditLog": {
+      "requiredScopes": {
+        "read": "audit:view"
+      }
+    },
+    "DeletionRequest": {
+      "orgColumn": "orgId",
+      "bypassScopes": {
+        "read": "compliance:manage",
+        "write": "compliance:manage"
+      }
+    },
+    "DataRetentionPolicy": {
+      "orgColumn": "orgId",
+      "bypassScopes": {
+        "read": "compliance:manage",
+        "write": "compliance:manage"
+      }
+    },
+    "ReportDefinition": {
+      "orgColumn": "orgId"
+    },
+    "ReportFolderShare": {
+      "accessVia": {
+        "column": "folderId",
+        "parentTable": "ReportFolder",
+        "parentColumn": "id"
+      }
+    },
+    "AiCache": {
+      "orgColumn": "orgId"
+    },
+    "CommunicationMessage": {
+      "orgColumn": "orgId"
+    },
+    "MessageTemplate": {
+      "orgColumn": "orgId"
+    },
+    "InternalComment": {
+      "orgColumn": "orgId"
+    },
+    "TeamChatChannel": {
+      "orgColumn": "orgId"
+    },
+    "TeamChatMessage": {
+      "accessVia": {
+        "column": "channelId",
+        "parentTable": "TeamChatChannel",
+        "parentColumn": "id"
+      }
+    },
+    "Interest": {
+      "orgColumn": "orgId"
+    },
+    "Campaign": {
+      "orgColumn": "orgId"
+    },
+    "DuplicateExclusion": {
+      "orgColumn": "orgId"
+    },
+    "Attachment": {
+      "orgColumn": "orgId"
+    },
+    "TenantAllowedScope": {
+      "requiredScopes": {
+        "read": "tenants:manage",
+        "write": "tenants:manage"
+      }
+    }
+  },
+  "services": {
+    "workflows": {
+      "requiredScopes": [],
+      "tools": {
+        "scheduleDraft": ["workflows:schedules:editOwn"],
+        "scheduleJob": ["workflows:schedules:editOwn"],
+        "updateSchedule": ["workflows:schedules:editOwn"],
+        "deleteSchedule": ["workflows:schedules:editOwn"]
+      }
+    }
+  }
+}

@@ -1,0 +1,227 @@
+/* ============================================================
+   VynHy Technologies — Light Theme Design System
+   Complete UI Theme File (Neutral 60% • Brand 30% • Semantic 10%)
+   ============================================================ */
+
+/* ------------------------------------------------------------
+   1. CSS VARIABLES — COLOR SYSTEM
+   ------------------------------------------------------------ */
+:root {
+  /* Neutral Backgrounds (60%) */
+  --bg-primary: #F8F9FA;
+  --bg-secondary: #E9ECEF;
+  --bg-white: #FFFFFF;
+
+  /* Neutral Text */
+  --text-primary: #111827;
+  --text-secondary: #4B5563;
+  --text-muted: #6B7280;
+
+  /* Neutral Borders */
+  --border-color: #D1D5DB;
+
+  /* Brand / Primary Action (30%) */
+  --brand-primary: #2563EB;
+  --brand-primary-hover: #1D4ED8;
+  --brand-primary-light: #DBEAFE;
+
+  /* Semantic (10%) */
+  --success: #10B981;
+  --warning: #F59E0B;
+  --error: #EF4444;
+
+  /* Shadows */
+  --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
+  --shadow-md: 0 4px 6px rgba(0,0,0,0.1);
+  --shadow-lg: 0 10px 15px rgba(0,0,0,0.15);
+
+  /* Radius */
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+
+  /* Transitions */
+  --transition: 0.2s ease;
+}
+
+/* ------------------------------------------------------------
+   2. GLOBAL BASE STYLES
+   ------------------------------------------------------------ */
+body {
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  font-family: 'Inter', sans-serif;
+  margin: 0;
+  padding: 0;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  color: var(--text-primary);
+  margin: 0 0 0.5rem 0;
+}
+
+p {
+  color: var(--text-secondary);
+  line-height: 1.6;
+}
+
+/* ------------------------------------------------------------
+   3. NAVBAR
+   ------------------------------------------------------------ */
+.navbar {
+  background: var(--bg-white);
+  border-bottom: 1px solid var(--border-color);
+  padding: 1rem 2rem;
+  box-shadow: var(--shadow-sm);
+}
+
+.navbar a {
+  color: var(--text-primary);
+  text-decoration: none;
+  margin-right: 1.5rem;
+  font-weight: 500;
+}
+
+.navbar a:hover {
+  color: var(--brand-primary);
+}
+
+/* ------------------------------------------------------------
+   4. BUTTONS
+   ------------------------------------------------------------ */
+.btn {
+  padding: 0.6rem 1.2rem;
+  border-radius: var(--radius-md);
+  border: none;
+  cursor: pointer;
+  font-weight: 500;
+  transition: var(--transition);
+}
+
+.btn-primary {
+  background: var(--brand-primary);
+  color: #fff;
+}
+
+.btn-primary:hover {
+  background: var(--brand-primary-hover);
+}
+
+.btn-outline {
+  background: transparent;
+  border: 1px solid var(--brand-primary);
+  color: var(--brand-primary);
+}
+
+.btn-outline:hover {
+  background: var(--brand-primary-light);
+}
+
+/* ------------------------------------------------------------
+   5. CARDS
+   ------------------------------------------------------------ */
+.card {
+  background: var(--bg-white);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 1.5rem;
+  box-shadow: var(--shadow-sm);
+  margin-bottom: 1.5rem;
+}
+
+/* ------------------------------------------------------------
+   6. TABLES
+   ------------------------------------------------------------ */
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  background: var(--bg-white);
+}
+
+.table th {
+  background: var(--bg-secondary);
+  padding: 0.75rem;
+  text-align: left;
+  color: var(--text-primary);
+}
+
+.table td {
+  padding: 0.75rem;
+  border-bottom: 1px solid var(--border-color);
+  color: var(--text-secondary);
+}
+
+/* ------------------------------------------------------------
+   7. FORMS
+   ------------------------------------------------------------ */
+.input {
+  width: 100%;
+  padding: 0.7rem;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  background: var(--bg-white);
+  color: var(--text-primary);
+  transition: var(--transition);
+}
+
+.input:focus {
+  border-color: var(--brand-primary);
+  outline: none;
+  box-shadow: 0 0 0 2px var(--brand-primary-light);
+}
+
+/* ------------------------------------------------------------
+   8. ALERTS
+   ------------------------------------------------------------ */
+.alert {
+  padding: 1rem;
+  border-radius: var(--radius-md);
+  color: #fff;
+  margin-bottom: 1rem;
+}
+
+.alert-success {
+  background: var(--success);
+}
+
+.alert-warning {
+  background: var(--warning);
+}
+
+.alert-error {
+  background: var(--error);
+}
+
+/* ------------------------------------------------------------
+   9. BADGES
+   ------------------------------------------------------------ */
+.badge {
+  padding: 0.3rem 0.6rem;
+  border-radius: var(--radius-sm);
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #fff;
+}
+
+.badge-success { background: var(--success); }
+.badge-warning { background: var(--warning); }
+.badge-error { background: var(--error); }
+
+/* ------------------------------------------------------------
+   10. UTILITY CLASSES
+   ------------------------------------------------------------ */
+.shadow-sm { box-shadow: var(--shadow-sm); }
+.shadow-md { box-shadow: var(--shadow-md); }
+.shadow-lg { box-shadow: var(--shadow-lg); }
+
+.rounded-sm { border-radius: var(--radius-sm); }
+.rounded-md { border-radius: var(--radius-md); }
+.rounded-lg { border-radius: var(--radius-lg); }
+
+.text-muted { color: var(--text-muted); }
+
+.bg-white { background: var(--bg-white); }
+.bg-primary { background: var(--brand-primary); }
+.bg-secondary { background: var(--bg-secondary); }
+
+.border { border: 1px solid var(--border-color); }
