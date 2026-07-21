@@ -40,8 +40,7 @@ export function InterestListPage() {
   const [campaigns, setCampaigns] = useState<Array<{ id: string; name: string }>>([]);
   const [creating, setCreating] = useState(false);
 
-  // Dev override: enable actions while DB/auth not available
-  const canEdit = true;
+  const canEdit = scopes.includes("interests:edit");
 
   const navigate = (path: string) => {
     window.history.pushState({}, "", basePath.concat(path));

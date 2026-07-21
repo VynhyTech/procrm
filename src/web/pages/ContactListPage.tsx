@@ -21,9 +21,7 @@ export function ContactListPage() {
   const [page, setPage] = useState(0);
   const pageSize = 20;
 
-  // Dev override: enable actions while DB/auth not available
-  const canDelete = true;
-  const canEdit = true;
+  const canDelete = scopes.includes("contacts:delete");
 
   const fetchContacts = useCallback(async () => {
     setLoading(true);
@@ -64,7 +62,7 @@ export function ContactListPage() {
           <h1 className="text-lg font-semibold text-foreground">Contacts</h1>
           <p className="text-xs text-foreground-muted">{total} total</p>
         </div>
-        {canEdit && (
+        {scopes.includes("contacts:edit") && (
           <a href="/contacts/new" className="flex items-center gap-1.5 rounded-lg bg-button-primary-bg px-3 py-2 text-sm font-medium text-button-primary-text transition-colors hover:bg-button-primary-hover">
             <Plus className="h-4 w-4" /> New Contact
           </a>

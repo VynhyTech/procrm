@@ -55,11 +55,10 @@ export function ContactDetailPage({ id }: ContactDetailPageProps) {
   const [taskPriority, setTaskPriority] = useState("Medium");
   const [creatingTask, setCreatingTask] = useState(false);
 
-  // Dev override: enable actions while DB/auth not available
-  const canEdit = true;
-  const canDelete = true;
-  const canAssign = true;
-  const canCreateTask = true;
+  const canEdit = scopes.includes("contacts:edit");
+  const canDelete = scopes.includes("contacts:delete");
+  const canAssign = scopes.includes("leads:assign");
+  const canCreateTask = scopes.includes("tasks:edit");
   const navigate = (path: string) => { window.history.pushState({}, "", basePath.concat(path)); window.dispatchEvent(new PopStateEvent("popstate")); };
 
   const fetchData = useCallback(async () => {

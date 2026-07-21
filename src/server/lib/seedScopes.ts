@@ -15,28 +15,16 @@ export async function seedScopes(db: PrismaClient): Promise<number> {
   const scopesPath = path.resolve(process.cwd(), "scopes.json");
   const { scopes } = JSON.parse(readFileSync(scopesPath, "utf-8")) as { scopes: ScopeDefinition[] };
 
-  try {
-    for (const scope of scopes) {
-      await db.scope.upsert({
-        where: { name: scope.name },
-        update: {
-          description: scope.description,
-          isSystem: scope.isSystem,
-          orgAssignable: scope.orgAssignable,
-        },
-        create: scope,
-      });
-    }
-  } catch (error) {
-    const message = error instanceof Error ? error.message : String(error);
-    const code = typeof error === "object" && error && "code" in error ? String((error as { code?: unknown }).code) : undefined;
-
-    if (code === "P1001" || code === "P1002" || message.includes("Can't reach database server") || message.includes("ECONNREFUSED")) {
-      console.warn("Skipping scope seeding because the database is unavailable:", message);
-      return 0;
-    }
-
-    throw error;
+  for (const scope of scopes) {
+    await db.scope.upsert({
+      where: { name: scope.name },
+      update: {
+        description: scope.description,
+        isSystem: scope.isSystem,
+        orgAssignable: scope.orgAssignable,
+      },
+      create: scope,
+    });
   }
 
   return scopes.length;

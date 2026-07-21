@@ -163,12 +163,11 @@ export function LeadListPage() {
   const [importing, setImporting] = useState(false);
   const [importResult, setImportResult] = useState<{ created: number; skipped: number; errors: Array<{ row: number; message: string }> } | null>(null);
 
-  // Dev override: enable actions while DB/auth not available
-  const canViewAll = true;
-  const canEdit = true;
-  const canDelete = true;
-  const canAssign = true;
-  const canSendMsg = true;
+  const canViewAll = scopes.includes("leads:viewAll");
+  const canEdit = scopes.includes("leads:edit");
+  const canDelete = scopes.includes("leads:delete");
+  const canAssign = scopes.includes("leads:assign");
+  const canSendMsg = scopes.includes("communications:send");
 
   const fetchStats = useCallback(async () => {
     try {

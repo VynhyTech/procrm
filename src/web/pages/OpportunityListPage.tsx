@@ -22,11 +22,10 @@ export function OpportunityListPage() {
   const [stageFilter, setStageFilter] = useState("");
   const [viewMode, setViewMode] = useState<"list" | "pipeline">("list");
 
-  // Dev override: enable actions while DB/auth not available
-  const canViewAll = true;
-  const canViewTeam = true;
-  const canEdit = true;
-  const canDelete = true;
+  const canViewAll = scopes.includes("opportunities:viewAll");
+  const canViewTeam = scopes.includes("opportunities:viewTeam");
+  const canEdit = scopes.includes("opportunities:edit");
+  const canDelete = scopes.includes("opportunities:delete");
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
   const [bulkDeleting, setBulkDeleting] = useState(false);

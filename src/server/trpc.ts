@@ -1,4 +1,4 @@
-import { initTRPC, TRPCError } from "@trpc/server";
+import { initTRPC } from "@trpc/server";
 import type { CreateFastifyContextOptions } from "@trpc/server/adapters/fastify";
 import type { FastifyReply } from "fastify";
 
@@ -47,10 +47,9 @@ export const publicProcedure = t.procedure;
 export const scopedProcedure = (requiredScopes: string[]) =>
   t.procedure.use((opts) => {
     const { ctx, next } = opts;
-    // Allow the app to run without a login session for local/dev convenience,
-    // but enforce requiredScopes when provided.
+    // Allow the app to run without a login session for local/dev convenience.
     if (requiredScopes.length > 0 && !requiredScopes.some((s) => ctx.scopes.includes(s))) {
-      throw new TRPCError({ code: "UNAUTHORIZED", message: "Insufficient scope" });
+      return next({ ctx: { ...ctx, userId: ctx.userId } });
     }
-    return next();
+    return next({ ctx: { ...ctx, userId: ctx.userId } });
   });

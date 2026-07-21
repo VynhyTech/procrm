@@ -38,8 +38,7 @@ export function InterestDetailPage({ id }: InterestDetailPageProps) {
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [deleting, setDeleting] = useState(false);
 
-  // Dev override: enable actions while DB/auth not available
-  const canEdit = true;
+  const canEdit = scopes.includes("interests:edit");
   const navigate = (path: string) => { window.history.pushState({}, "", basePath.concat(path)); window.dispatchEvent(new PopStateEvent("popstate")); };
 
   const fetchData = useCallback(async () => {

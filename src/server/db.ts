@@ -1,11 +1,6 @@
 import { PrismaClient } from "@prisma/client";
-import { PrismaMariaDb } from "@prisma/adapter-mariadb";
+import { PrismaPg } from "@prisma/adapter-pg";
 
-const databaseUrl = process.env.DATABASE_URL;
-if (!databaseUrl) {
-  throw new Error("DATABASE_URL environment variable is required");
-}
-
-const adapter = new PrismaMariaDb(databaseUrl);
+const adapter = new PrismaPg(process.env.DATABASE_URL as string);
 
 export const prisma = new PrismaClient({ adapter });
