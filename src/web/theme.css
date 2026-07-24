@@ -1,39 +1,39 @@
 /* ============================================================
-   VynHy Technologies — Light Theme Design System
-   Complete UI Theme File (Neutral 60% • Brand 30% • Semantic 10%)
+   VynHy Technologies — Enhanced Light Theme
+   Improvements: Contrast • Depth • Clarity • Premium Feel
    ============================================================ */
 
 /* ------------------------------------------------------------
    1. CSS VARIABLES — COLOR SYSTEM
    ------------------------------------------------------------ */
 :root {
-  /* Neutral Backgrounds (60%) */
-  --bg-primary: #F8F9FA;
-  --bg-secondary: #E9ECEF;
+  /* Neutral Backgrounds (slightly stronger for better contrast) */
+  --bg-primary: #F7F8FA;
+  --bg-secondary: #E2E6EA;       /* darker than before */
   --bg-white: #FFFFFF;
 
-  /* Neutral Text */
+  /* Neutral Text (stronger hierarchy) */
   --text-primary: #111827;
-  --text-secondary: #4B5563;
+  --text-secondary: #374151;     /* darker for readability */
   --text-muted: #6B7280;
 
-  /* Neutral Borders */
-  --border-color: #D1D5DB;
+  /* Neutral Borders (slightly darker for definition) */
+  --border-color: #C5CBD3;
 
-  /* Brand / Primary Action (30%) */
+  /* Brand / Primary Action */
   --brand-primary: #2563EB;
   --brand-primary-hover: #1D4ED8;
   --brand-primary-light: #DBEAFE;
 
-  /* Semantic (10%) */
+  /* Semantic Colors */
   --success: #10B981;
   --warning: #F59E0B;
   --error: #EF4444;
 
-  /* Shadows */
-  --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
-  --shadow-md: 0 4px 6px rgba(0,0,0,0.1);
-  --shadow-lg: 0 10px 15px rgba(0,0,0,0.15);
+  /* Shadows (slightly deeper for premium feel) */
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.08);
+  --shadow-md: 0 4px 8px rgba(0,0,0,0.12);
+  --shadow-lg: 0 12px 20px rgba(0,0,0,0.18);
 
   /* Radius */
   --radius-sm: 4px;
@@ -66,7 +66,7 @@ p {
 }
 
 /* ------------------------------------------------------------
-   3. NAVBAR
+   3. NAVBAR — More defined, premium look
    ------------------------------------------------------------ */
 .navbar {
   background: var(--bg-white);
@@ -87,24 +87,27 @@ p {
 }
 
 /* ------------------------------------------------------------
-   4. BUTTONS
+   4. BUTTONS — More depth + better contrast
    ------------------------------------------------------------ */
 .btn {
   padding: 0.6rem 1.2rem;
   border-radius: var(--radius-md);
-  border: none;
+  border: 1px solid rgba(0,0,0,0.05); /* subtle border */
   cursor: pointer;
   font-weight: 500;
   transition: var(--transition);
+  box-shadow: var(--shadow-sm);       /* subtle depth */
 }
 
 .btn-primary {
   background: var(--brand-primary);
   color: #fff;
+  box-shadow: var(--shadow-md);       /* stronger depth */
 }
 
 .btn-primary:hover {
   background: var(--brand-primary-hover);
+  transform: translateY(-1px);        /* premium micro-interaction */
 }
 
 .btn-outline {
@@ -118,19 +121,19 @@ p {
 }
 
 /* ------------------------------------------------------------
-   5. CARDS
+   5. CARDS — Slight gradient + deeper shadow
    ------------------------------------------------------------ */
 .card {
-  background: var(--bg-white);
+  background: linear-gradient(#FFFFFF, #FAFAFA); /* subtle premium gradient */
   border: 1px solid var(--border-color);
   border-radius: var(--radius-md);
-  padding: 1.5rem;
-  box-shadow: var(--shadow-sm);
+  padding: 1.25rem;                  /* tighter spacing */
+  box-shadow: var(--shadow-md);      /* deeper shadow */
   margin-bottom: 1.5rem;
 }
 
 /* ------------------------------------------------------------
-   6. TABLES
+   6. TABLES — Stronger headers + clearer hierarchy
    ------------------------------------------------------------ */
 .table {
   width: 100%;
@@ -139,20 +142,22 @@ p {
 }
 
 .table th {
-  background: var(--bg-secondary);
-  padding: 0.75rem;
+  background: var(--brand-primary-light); /* soft blue highlight */
+  padding: 0.65rem 0.75rem;
   text-align: left;
-  color: var(--text-primary);
+  color: var(--brand-primary);
+  font-weight: 600;
+  border-bottom: 2px solid var(--brand-primary); /* strong definition */
 }
 
 .table td {
-  padding: 0.75rem;
+  padding: 0.65rem 0.75rem;
   border-bottom: 1px solid var(--border-color);
   color: var(--text-secondary);
 }
 
 /* ------------------------------------------------------------
-   7. FORMS
+   7. FORMS — Cleaner focus ring
    ------------------------------------------------------------ */
 .input {
   width: 100%;
@@ -180,17 +185,9 @@ p {
   margin-bottom: 1rem;
 }
 
-.alert-success {
-  background: var(--success);
-}
-
-.alert-warning {
-  background: var(--warning);
-}
-
-.alert-error {
-  background: var(--error);
-}
+.alert-success { background: var(--success); }
+.alert-warning { background: var(--warning); }
+.alert-error { background: var(--error); }
 
 /* ------------------------------------------------------------
    9. BADGES
@@ -208,7 +205,20 @@ p {
 .badge-error { background: var(--error); }
 
 /* ------------------------------------------------------------
-   10. UTILITY CLASSES
+   10. ACTION ICONS — More visible + interactive
+   ------------------------------------------------------------ */
+.action-icon {
+  color: var(--text-muted);
+  transition: var(--transition);
+}
+
+.action-icon:hover {
+  color: var(--brand-primary);
+  transform: scale(1.1); /* subtle interaction */
+}
+
+/* ------------------------------------------------------------
+   11. UTILITY CLASSES
    ------------------------------------------------------------ */
 .shadow-sm { box-shadow: var(--shadow-sm); }
 .shadow-md { box-shadow: var(--shadow-md); }
